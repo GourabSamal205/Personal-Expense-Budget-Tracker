@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personal Expense & Budget Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Personal Expense &amp; Budget Tracker</h1>
+      <div class="total-box">Total Spent: ₹{{ "%.2f"|format(grand_total) }}</div>
+    </header>
+
+    <section class="card">
+      <h2>Add New Expense</h2>
+      <form method="post" action="{{ url_for('add_expense') }}" class="expense-form">
+        <input type="text" name="title" placeholder="Expense title (e.g. Lunch)" required />
+        <select name="category" required>
+          <option value="Food">Food</option>
+          <option value="Travel">Travel</option>
+          <option value="Books">Books</option>
+          <option value="Bills">Bills</option>
+        </select>
+        <input type="number" name="amount" step="0.01" min="1" placeholder="Amount (₹)" required />
+        <input type="date" name="spent_date" required />
+        <button type="submit" class="primary">Add Expense</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Category Spending vs. Monthly Budget (SQL GROUP BY)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Spent</th>
+            <th>Budget Limit</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in category_summary %}
+          <tr>
+            <td><strong>{{ row.category }}</strong></td>
+            <td>₹{{ "%.2f"|format(row.total_spent) }}</td>
+            <td>₹{{ "%.2f"|format(row.monthly_limit) }}</td>
+            <td>
+              {% if row.total_spent > row.monthly_limit %}
+                <span class="badge warn">Over Budget!</span>
+              {% else %}
+                <span class="badge ok">Within Limit</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Recent Expenses</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in expenses %}
+          <tr>
+            <td>{{ item.spent_date }}</td>
+            <td>{{ item.title }}</td>
+            <td>{{ item.category }}</td>
+            <td>₹{{ "%.2f"|format(item.amount) }}</td>
+            <td>
+              <form method="post" action="{{ url_for('delete_expense', expense_id=item.id) }}">
+                <button type="submit" class="danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5">No expenses added yet. Add your first expense above!</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </div>
+</body>
+</html>
